@@ -1,0 +1,17 @@
+{
+  "name": "CalOhm",
+  "short_name": "CalOhm",
+  "description": "Calculadora eléctrica profesional para electricistas domiciliarios argentinos, basada en AEA 90364.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0f18",
+  "theme_color": "#1e5fd9",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

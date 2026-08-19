@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CalOhm — Calculadora eléctrica</title>
+  <meta name="description" content="Calculadora eléctrica profesional para electricistas domiciliarios argentinos, basada en AEA 90364." />
+  <meta name="theme-color" content="#1e5fd9" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-theme="claro">
+  <div id="app"></div>
+
+  <!-- Datos -->
+  <script src="./data/conductors.js"></script>
+  <script src="./data/normative-data.js"></script>
+
+  <!-- Lógica -->
+  <script src="./js/validation.js"></script>
+  <script src="./js/calculations.js"></script>
+  <script src="./js/normative.js"></script>
+  <script src="./js/storage.js"></script>
+  <script src="./js/ui.js"></script>
+
+  <!-- Controlador -->
+  <script src="./app.js"></script>
+</body>
+</html>
