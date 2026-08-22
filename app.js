@@ -19,11 +19,17 @@ const App = (() => {
   }
 
   function applyTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme === "oscuro" ? "oscuro" : "claro");
+    document.documentElement.setAttribute(
+      "data-theme",
+      theme === "oscuro" ? "oscuro" : "claro",
+    );
   }
 
   function toggleTheme() {
-    const actual = document.documentElement.getAttribute("data-theme") === "oscuro" ? "oscuro" : "claro";
+    const actual =
+      document.documentElement.getAttribute("data-theme") === "oscuro"
+        ? "oscuro"
+        : "claro";
     const nuevo = actual === "oscuro" ? "claro" : "oscuro";
     applyTheme(nuevo);
     Storage.setTheme(nuevo);

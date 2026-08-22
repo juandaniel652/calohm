@@ -10,27 +10,76 @@ const UI = (() => {
   const app = () => document.getElementById("app");
 
   const TOOLS = [
-    { id: "caida", nombre: "Caída de tensión", icono: "⚡", principal: true },
-    { id: "corriente", nombre: "Corriente", icono: "A" },
-    { id: "potencia", nombre: "Potencia", icono: "P" },
-    { id: "aparente", nombre: "Potencia aparente", icono: "S" },
-    { id: "reactiva", nombre: "Potencia reactiva", icono: "Q" },
-    { id: "fp", nombre: "Factor de potencia", icono: "cφ" },
+    {
+      id: "caida",
+      nombre: "Caída de tensión",
+      icono: "Ω",
+      principal: true,
+      desc: "Caída de tensión y verificación de sección según AEA 90364",
+    },
+    {
+      id: "corriente",
+      nombre: "Corriente",
+      icono: "A",
+      desc: "Corriente desde potencia y cos φ",
+    },
+    {
+      id: "potencia",
+      nombre: "Potencia activa",
+      icono: "P",
+      desc: "Potencia activa desde V, I y cos φ",
+    },
+    {
+      id: "aparente",
+      nombre: "Potencia aparente",
+      icono: "S",
+      desc: "Potencia aparente desde V e I",
+    },
+    {
+      id: "reactiva",
+      nombre: "Potencia reactiva",
+      icono: "Q",
+      desc: "Potencia reactiva desde P y cos φ",
+    },
+    {
+      id: "fp",
+      nombre: "Factor de potencia",
+      icono: "cφ",
+      desc: "cos φ desde potencia activa y aparente o reactiva",
+    },
   ];
 
   function num(v) {
-    return Number(v).toLocaleString("es-AR", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    return Number(v).toLocaleString("es-AR", {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+    });
   }
 
-  // ---- Home -------------------------------------------------------------
+  // ---- Home: catálogo de cálculos ---------------------------------------
   function renderHome() {
-    const cards = TOOLS.map(
-      (t) => `
-      <button class="tool-card ${t.principal ? "tool-card--principal" : ""}" data-tool="${t.id}">
-        <span class="tool-card__icon">${t.icono}</span>
+    const cards = TOOLS.map((t) => {
+      if (t.principal) {
+        return `
+        <button class="tool-card tool-card--principal" data-tool="${t.id}">
+          <span class="tool-card__icon">${t.icono}</span>
+          <div class="tool-card__body">
+            <span class="tool-card__nombre">${t.nombre}</span>
+            <span class="tool-card__desc">${t.desc}</span>
+          </div>
+          <span class="tool-card__arrow">→</span>
+        </button>`;
+      }
+      return `
+      <button class="tool-card" data-tool="${t.id}">
+        <div class="tool-card__top">
+          <span class="tool-card__icon">${t.icono}</span>
+          <span class="tool-card__arrow">→</span>
+        </div>
         <span class="tool-card__nombre">${t.nombre}</span>
-      </button>`
-    ).join("");
+        <span class="tool-card__desc">${t.desc}</span>
+      </button>`;
+    }).join("");
 
     app().innerHTML = `
       <header class="topbar">
@@ -38,12 +87,15 @@ const UI = (() => {
           <span class="brand__mark">Ω</span>
           <div>
             <h1 class="brand__title">CalOhm</h1>
-            <p class="brand__subtitle">Calculadora eléctrica</p>
+            <p class="brand__subtitle">Cálculos eléctricos</p>
           </div>
         </div>
         <button id="theme-toggle" class="icon-btn" aria-label="Cambiar tema">◐</button>
       </header>
-      <main class="home-grid">${cards}</main>
+      <main class="home-grid">
+        <p class="home-grid__label">Seleccionar cálculo</p>
+        ${cards}
+      </main>
       <footer class="disclaimer">
         Los resultados de CalOhm son una herramienta de cálculo y verificación.
         La selección definitiva de conductores, protecciones y demás componentes
@@ -55,22 +107,31 @@ const UI = (() => {
     document.querySelectorAll("[data-tool]").forEach((btn) => {
       btn.addEventListener("click", () => App.navigate(btn.dataset.tool));
     });
-    document.getElementById("theme-toggle").addEventListener("click", App.toggleTheme);
+    document
+      .getElementById("theme-toggle")
+      .addEventListener("click", App.toggleTheme);
   }
 
   // ---- Encabezado de pantalla reutilizable -------------------------------
   function screenHeader(titulo) {
     return `
       <header class="topbar topbar--screen">
-        <button class="icon-btn" id="btn-back" aria-label="Volver">←</button>
-        <h2 class="screen-title">${titulo}</h2>
+        <button class="icon-btn" id="btn-back" aria-label="Volver al catálogo">←</button>
+        <div>
+          <span class="topbar--screen__eyebrow">CalOhm</span>
+          <h2 class="screen-title">${titulo}</h2>
+        </div>
         <button id="theme-toggle" class="icon-btn" aria-label="Cambiar tema">◐</button>
       </header>`;
   }
 
   function bindHeader() {
-    document.getElementById("btn-back").addEventListener("click", () => App.navigate("home"));
-    document.getElementById("theme-toggle").addEventListener("click", App.toggleTheme);
+    document
+      .getElementById("btn-back")
+      .addEventListener("click", () => App.navigate("home"));
+    document
+      .getElementById("theme-toggle")
+      .addEventListener("click", App.toggleTheme);
   }
 
   function errorBox(id) {
@@ -82,9 +143,31 @@ const UI = (() => {
     if (el) el.textContent = mensaje || "";
   }
 
+  // ---- Campo con unidad embebida ------------------------------------------
+  function fieldConUnidad(label, inputHtml, unidad) {
+    return `
+      <label class="field">
+        <span class="field__label">${label}</span>
+        <span class="field__control field__control--with-unit">
+          ${inputHtml}
+          <span class="field__unit">${unidad}</span>
+        </span>
+      </label>`;
+  }
+
+  function fieldSimple(label, inputHtml) {
+    return `
+      <label class="field">
+        <span class="field__label">${label}</span>
+        ${inputHtml}
+      </label>`;
+  }
+
   // ---- Caída de tensión ---------------------------------------------------
   function renderCaidaTension() {
-    const secciones = STANDARD_SECTIONS_MM2.map((s) => `<option value="${s}">${s} mm²</option>`).join("");
+    const secciones = STANDARD_SECTIONS_MM2.map(
+      (s) => `<option value="${s}">${s} mm²</option>`,
+    ).join("");
     app().innerHTML = `
       ${screenHeader("Caída de tensión")}
       <main class="form">
@@ -96,10 +179,7 @@ const UI = (() => {
           </div>
         </fieldset>
 
-        <label class="field">
-          <span>Tensión (V)</span>
-          <input type="number" inputmode="decimal" id="ct-tension" value="220">
-        </label>
+        ${fieldConUnidad("Tensión", `<input type="number" inputmode="decimal" id="ct-tension" value="220">`, "V")}
 
         <fieldset class="field-group">
           <legend>Material del conductor</legend>
@@ -109,16 +189,16 @@ const UI = (() => {
           </div>
         </fieldset>
 
-        <label class="field">
-          <span>Tipo de circuito</span>
-          <select id="ct-tipo">
+        ${fieldSimple(
+          "Tipo de circuito",
+          `<select id="ct-tipo">
             <option value="IUG">Iluminación (IUG)</option>
             <option value="TUG" selected>Tomacorrientes uso general (TUG)</option>
             <option value="TUE">Tomacorrientes uso especial (TUE)</option>
             <option value="MOTOR">Motor</option>
             <option value="ESPECIFICO">Uso específico</option>
-          </select>
-        </label>
+          </select>`,
+        )}
 
         <fieldset class="field-group">
           <legend>¿Qué dato de la carga conocés?</legend>
@@ -129,34 +209,21 @@ const UI = (() => {
         </fieldset>
 
         <div id="ct-carga-potencia">
-          <label class="field">
-            <span>Potencia (W)</span>
-            <input type="number" inputmode="decimal" id="ct-potencia">
-          </label>
+          ${fieldConUnidad("Potencia", `<input type="number" inputmode="decimal" id="ct-potencia">`, "W")}
         </div>
         <div id="ct-carga-corriente" class="is-hidden">
-          <label class="field">
-            <span>Corriente (A)</span>
-            <input type="number" inputmode="decimal" id="ct-corriente">
-          </label>
+          ${fieldConUnidad("Corriente", `<input type="number" inputmode="decimal" id="ct-corriente">`, "A")}
         </div>
 
-        <label class="field">
-          <span>Factor de potencia (cos φ)</span>
-          <input type="number" inputmode="decimal" step="0.01" id="ct-cosphi" value="1">
-        </label>
+        ${fieldSimple("Factor de potencia (cos φ)", `<input type="number" inputmode="decimal" step="0.01" id="ct-cosphi" value="1">`)}
         ${errorBox("ct-err-cosphi")}
 
-        <label class="field">
-          <span>Distancia tablero → carga (m)</span>
-          <input type="number" inputmode="decimal" id="ct-distancia">
-        </label>
+        ${fieldConUnidad("Distancia tablero → carga", `<input type="number" inputmode="decimal" id="ct-distancia">`, "m")}
         ${errorBox("ct-err-distancia")}
 
-        <label class="field">
-          <span>Sección a evaluar</span>
-          <select id="ct-seccion">${secciones}</select>
-        </label>
+        ${fieldSimple("Sección a evaluar", `<select id="ct-seccion">${secciones}</select>`)}
+
+        <hr class="divider">
 
         <button class="btn btn--primary" id="ct-calcular">Calcular</button>
         <button class="btn btn--secondary" id="ct-auto">Encontrar sección recomendada</button>
@@ -171,7 +238,8 @@ const UI = (() => {
       const btn = e.target.closest(".segmented__opt");
       if (!btn) return;
       setActive(sistemaGroup, btn);
-      document.getElementById("ct-tension").value = btn.dataset.val === "mono" ? 220 : 380;
+      document.getElementById("ct-tension").value =
+        btn.dataset.val === "mono" ? 220 : 380;
     });
 
     setActive(document.getElementById("ct-material"), null);
@@ -187,12 +255,18 @@ const UI = (() => {
       if (!btn) return;
       setActive(datoCargaGroup, btn);
       const esPotencia = btn.dataset.val === "potencia";
-      document.getElementById("ct-carga-potencia").classList.toggle("is-hidden", !esPotencia);
-      document.getElementById("ct-carga-corriente").classList.toggle("is-hidden", esPotencia);
+      document
+        .getElementById("ct-carga-potencia")
+        .classList.toggle("is-hidden", !esPotencia);
+      document
+        .getElementById("ct-carga-corriente")
+        .classList.toggle("is-hidden", esPotencia);
     });
 
     document.getElementById("ct-calcular").addEventListener("click", () => {
-      const seccionElegida = Number(document.getElementById("ct-seccion").value);
+      const seccionElegida = Number(
+        document.getElementById("ct-seccion").value,
+      );
       const r = calcularCaidaTension(seccionElegida);
       if (r) renderResultadoCaidaTension(r);
     });
@@ -204,17 +278,22 @@ const UI = (() => {
   }
 
   function setActive(group, btn) {
-    group.querySelectorAll(".segmented__opt").forEach((b) => b.classList.remove("is-active"));
+    group.querySelectorAll(".segmented__opt").forEach((b) => {
+      b.classList.remove("is-active");
+    });
     if (btn) btn.classList.add("is-active");
     else group.querySelector(".segmented__opt").classList.add("is-active");
   }
 
   function leerDatosCaidaTension() {
-    const sistema = document.querySelector("#ct-sistema .is-active").dataset.val;
+    const sistema = document.querySelector("#ct-sistema .is-active").dataset
+      .val;
     const V = Number(document.getElementById("ct-tension").value);
-    const material = document.querySelector("#ct-material .is-active").dataset.val;
+    const material = document.querySelector("#ct-material .is-active").dataset
+      .val;
     const tipoCircuito = document.getElementById("ct-tipo").value;
-    const datoCarga = document.querySelector("#ct-datocarga .is-active").dataset.val;
+    const datoCarga = document.querySelector("#ct-datocarga .is-active").dataset
+      .val;
     const cosPhiRaw = document.getElementById("ct-cosphi").value;
     const distanciaRaw = document.getElementById("ct-distancia").value;
 
@@ -256,7 +335,16 @@ const UI = (() => {
           : Calc.corrienteTrifasicaDesdePotencia(potenciaW, V, cosPhi);
     }
 
-    return { sistema, V, material, tipoCircuito, cosPhi, distancia, corrienteA, potenciaW };
+    return {
+      sistema,
+      V,
+      material,
+      tipoCircuito,
+      cosPhi,
+      distancia,
+      corrienteA,
+      potenciaW,
+    };
   }
 
   function calcularCaidaTension(seccion_mm2) {
@@ -265,14 +353,37 @@ const UI = (() => {
     const resistividad = RESISTIVITY_OHM_MM2_PER_M[datos.material];
     const deltaV =
       datos.sistema === "mono"
-        ? Calc.caidaTensionMonofasica(datos.corrienteA, datos.distancia, resistividad, seccion_mm2, datos.cosPhi)
-        : Calc.caidaTensionTrifasica(datos.corrienteA, datos.distancia, resistividad, seccion_mm2, datos.cosPhi);
+        ? Calc.caidaTensionMonofasica(
+            datos.corrienteA,
+            datos.distancia,
+            resistividad,
+            seccion_mm2,
+            datos.cosPhi,
+          )
+        : Calc.caidaTensionTrifasica(
+            datos.corrienteA,
+            datos.distancia,
+            resistividad,
+            seccion_mm2,
+            datos.cosPhi,
+          );
     const deltaVPct = Calc.caidaTensionPorcentual(deltaV, datos.V);
     const tensionCarga = Calc.tensionEnLaCarga(datos.V, deltaV);
     const regla = Normative.limiteCaidaTension(datos.tipoCircuito);
-    const estado = Normative.evaluarEstado(deltaVPct, regla ? regla.valor : null);
+    const estado = Normative.evaluarEstado(
+      deltaVPct,
+      regla ? regla.valor : null,
+    );
 
-    return { datos, seccion_mm2, deltaV, deltaVPct, tensionCarga, regla, estado };
+    return {
+      datos,
+      seccion_mm2,
+      deltaV,
+      deltaVPct,
+      tensionCarga,
+      regla,
+      estado,
+    };
   }
 
   function encontrarSeccionRecomendada() {
@@ -282,33 +393,50 @@ const UI = (() => {
       if (r.estado.estado === "CUMPLE") return r;
     }
     // Ninguna sección de la serie cumple: devolver el cálculo con la mayor sección disponible.
-    return calcularCaidaTension(STANDARD_SECTIONS_MM2[STANDARD_SECTIONS_MM2.length - 1]);
+    return calcularCaidaTension(
+      STANDARD_SECTIONS_MM2[STANDARD_SECTIONS_MM2.length - 1],
+    );
+  }
+
+  function claseEstado(estado) {
+    if (estado === "CUMPLE") return "status--ok";
+    if (estado === "NO_CUMPLE") return "status--fail";
+    return "status--warn";
   }
 
   function renderResultadoCaidaTension(r, esAuto) {
-    const { datos, seccion_mm2, deltaV, deltaVPct, tensionCarga, regla, estado } = r;
-    const badgeClass =
-      estado.estado === "CUMPLE" ? "badge--ok" : estado.estado === "NO_CUMPLE" ? "badge--fail" : "badge--warn";
+    const {
+      datos,
+      seccion_mm2,
+      deltaV,
+      deltaVPct,
+      tensionCarga,
+      regla,
+      estado,
+    } = r;
+    const statusClass = claseEstado(estado.estado);
 
     const advertenciaAmpacidad = normativeRules.corrienteAdmisible.verificado
       ? ""
-      : `<p class="notice notice--pending">⚠ Este resultado evalúa solo caída de tensión. La verificación de
-         corriente admisible (ampacidad) según AEA 90364-7-770 Tablas 770.12.I/III está pendiente de carga
-         en esta versión — confirmá la ampacidad de la sección por tu cuenta.</p>`;
+      : `<p class="notice notice--pending"><strong>Advertencia —</strong> Este resultado evalúa solo caída de
+         tensión. La verificación de corriente admisible (ampacidad) según AEA 90364-7-770 Tablas 770.12.I/III
+         está pendiente de carga en esta versión — confirmá la ampacidad de la sección por tu cuenta.</p>`;
 
     document.getElementById("ct-resultado").innerHTML = `
       <section class="result">
-        <h3>Resultado</h3>
-        ${esAuto ? `<p class="notice">Sección recomendada evaluada automáticamente: <strong>${seccion_mm2} mm²</strong></p>` : ""}
+        <p class="result__label">Caída de tensión</p>
+        <div class="result__primary">
+          <span class="result__value">${num(deltaV)}</span><span class="result__unit">V</span>
+        </div>
+        ${esAuto ? `<p class="result__note">Sección recomendada evaluada automáticamente: <strong>${seccion_mm2} mm²</strong></p>` : ""}
+        <p class="status ${statusClass}"><span class="status__dot"></span>${estado.texto}</p>
         <dl class="result-grid">
           <div><dt>Corriente</dt><dd>${num(datos.corrienteA)} A</dd></div>
           <div><dt>Sección utilizada</dt><dd>${seccion_mm2} mm²</dd></div>
-          <div><dt>Caída de tensión</dt><dd>${num(deltaV)} V</dd></div>
           <div><dt>Caída porcentual</dt><dd>${num(deltaVPct)} %</dd></div>
           <div><dt>Límite aplicable</dt><dd>${regla && regla.valor !== null ? regla.valor.toFixed(2) + " %" : "no verificado"}</dd></div>
           <div><dt>Tensión en la carga</dt><dd>${num(tensionCarga)} V</dd></div>
         </dl>
-        <p class="badge ${badgeClass}">${estado.texto}</p>
         ${advertenciaAmpacidad}
         <details class="ver-calculo">
           <summary>Ver cálculo</summary>
@@ -362,9 +490,9 @@ ${RESISTIVITY_NOTE}`;
             <button type="button" class="segmented__opt" data-val="tri">Trifásico</button>
           </div>
         </fieldset>
-        <label class="field"><span>Tensión (V)</span><input type="number" inputmode="decimal" id="i-tension" value="220"></label>
-        <label class="field"><span>Potencia (W)</span><input type="number" inputmode="decimal" id="i-potencia"></label>
-        <label class="field"><span>Factor de potencia (cos φ)</span><input type="number" inputmode="decimal" step="0.01" id="i-cosphi" value="1"></label>
+        ${fieldConUnidad("Tensión", `<input type="number" inputmode="decimal" id="i-tension" value="220">`, "V")}
+        ${fieldConUnidad("Potencia", `<input type="number" inputmode="decimal" id="i-potencia">`, "W")}
+        ${fieldSimple("Factor de potencia (cos φ)", `<input type="number" inputmode="decimal" step="0.01" id="i-cosphi" value="1">`)}
         ${errorBox("i-err")}
         <button class="btn btn--primary" id="i-calcular">Calcular</button>
         <div id="i-resultado"></div>
@@ -374,23 +502,32 @@ ${RESISTIVITY_NOTE}`;
       const btn = e.target.closest(".segmented__opt");
       if (!btn) return;
       setActive(document.getElementById("i-sistema"), btn);
-      document.getElementById("i-tension").value = btn.dataset.val === "mono" ? 220 : 380;
+      document.getElementById("i-tension").value =
+        btn.dataset.val === "mono" ? 220 : 380;
     });
     document.getElementById("i-calcular").addEventListener("click", () => {
-      const sistema = document.querySelector("#i-sistema .is-active").dataset.val;
+      const sistema = document.querySelector("#i-sistema .is-active").dataset
+        .val;
       const V = Number(document.getElementById("i-tension").value);
       const P = document.getElementById("i-potencia").value;
       const cosPhiRaw = document.getElementById("i-cosphi").value;
       const vP = Validation.validarPositivo(P, "la potencia");
       const vCos = Validation.validarCosPhi(cosPhiRaw);
-      setError("i-err", !vP.valido ? vP.mensaje : !vCos.valido ? vCos.mensaje : "");
+      setError(
+        "i-err",
+        !vP.valido ? vP.mensaje : !vCos.valido ? vCos.mensaje : "",
+      );
       if (!vP.valido || !vCos.valido) return;
       const cosPhi = Number(cosPhiRaw);
       const I =
         sistema === "mono"
           ? Calc.corrienteMonofasicaDesdePotencia(Number(P), V, cosPhi)
           : Calc.corrienteTrifasicaDesdePotencia(Number(P), V, cosPhi);
-      document.getElementById("i-resultado").innerHTML = resultadoSimple("Corriente", num(I) + " A");
+      document.getElementById("i-resultado").innerHTML = resultadoSimple(
+        "Corriente",
+        num(I),
+        "A",
+      );
     });
   }
 
@@ -406,9 +543,9 @@ ${RESISTIVITY_NOTE}`;
             <button type="button" class="segmented__opt" data-val="tri">Trifásico</button>
           </div>
         </fieldset>
-        <label class="field"><span>Tensión (V)</span><input type="number" inputmode="decimal" id="p-tension" value="220"></label>
-        <label class="field"><span>Corriente (A)</span><input type="number" inputmode="decimal" id="p-corriente"></label>
-        <label class="field"><span>Factor de potencia (cos φ)</span><input type="number" inputmode="decimal" step="0.01" id="p-cosphi" value="1"></label>
+        ${fieldConUnidad("Tensión", `<input type="number" inputmode="decimal" id="p-tension" value="220">`, "V")}
+        ${fieldConUnidad("Corriente", `<input type="number" inputmode="decimal" id="p-corriente">`, "A")}
+        ${fieldSimple("Factor de potencia (cos φ)", `<input type="number" inputmode="decimal" step="0.01" id="p-cosphi" value="1">`)}
         ${errorBox("p-err")}
         <button class="btn btn--primary" id="p-calcular">Calcular</button>
         <div id="p-resultado"></div>
@@ -418,23 +555,32 @@ ${RESISTIVITY_NOTE}`;
       const btn = e.target.closest(".segmented__opt");
       if (!btn) return;
       setActive(document.getElementById("p-sistema"), btn);
-      document.getElementById("p-tension").value = btn.dataset.val === "mono" ? 220 : 380;
+      document.getElementById("p-tension").value =
+        btn.dataset.val === "mono" ? 220 : 380;
     });
     document.getElementById("p-calcular").addEventListener("click", () => {
-      const sistema = document.querySelector("#p-sistema .is-active").dataset.val;
+      const sistema = document.querySelector("#p-sistema .is-active").dataset
+        .val;
       const V = Number(document.getElementById("p-tension").value);
       const I = document.getElementById("p-corriente").value;
       const cosPhiRaw = document.getElementById("p-cosphi").value;
       const vI = Validation.validarPositivo(I, "la corriente");
       const vCos = Validation.validarCosPhi(cosPhiRaw);
-      setError("p-err", !vI.valido ? vI.mensaje : !vCos.valido ? vCos.mensaje : "");
+      setError(
+        "p-err",
+        !vI.valido ? vI.mensaje : !vCos.valido ? vCos.mensaje : "",
+      );
       if (!vI.valido || !vCos.valido) return;
       const cosPhi = Number(cosPhiRaw);
       const P =
         sistema === "mono"
           ? Calc.potenciaActivaMonofasica(V, Number(I), cosPhi)
           : Calc.potenciaActivaTrifasica(V, Number(I), cosPhi);
-      document.getElementById("p-resultado").innerHTML = resultadoSimple("Potencia activa", num(P) + " W");
+      document.getElementById("p-resultado").innerHTML = resultadoSimple(
+        "Potencia activa",
+        num(P),
+        "W",
+      );
     });
   }
 
@@ -450,8 +596,8 @@ ${RESISTIVITY_NOTE}`;
             <button type="button" class="segmented__opt" data-val="tri">Trifásico</button>
           </div>
         </fieldset>
-        <label class="field"><span>Tensión (V)</span><input type="number" inputmode="decimal" id="s-tension" value="220"></label>
-        <label class="field"><span>Corriente (A)</span><input type="number" inputmode="decimal" id="s-corriente"></label>
+        ${fieldConUnidad("Tensión", `<input type="number" inputmode="decimal" id="s-tension" value="220">`, "V")}
+        ${fieldConUnidad("Corriente", `<input type="number" inputmode="decimal" id="s-corriente">`, "A")}
         ${errorBox("s-err")}
         <button class="btn btn--primary" id="s-calcular">Calcular</button>
         <div id="s-resultado"></div>
@@ -461,20 +607,26 @@ ${RESISTIVITY_NOTE}`;
       const btn = e.target.closest(".segmented__opt");
       if (!btn) return;
       setActive(document.getElementById("s-sistema"), btn);
-      document.getElementById("s-tension").value = btn.dataset.val === "mono" ? 220 : 380;
+      document.getElementById("s-tension").value =
+        btn.dataset.val === "mono" ? 220 : 380;
     });
     document.getElementById("s-calcular").addEventListener("click", () => {
-      const sistema = document.querySelector("#s-sistema .is-active").dataset.val;
+      const sistema = document.querySelector("#s-sistema .is-active").dataset
+        .val;
       const V = Number(document.getElementById("s-tension").value);
       const I = document.getElementById("s-corriente").value;
       const vI = Validation.validarPositivo(I, "la corriente");
       setError("s-err", vI.mensaje);
       if (!vI.valido) return;
-      const S = sistema === "mono" ? Calc.potenciaAparenteMonofasica(V, Number(I)) : Calc.potenciaAparenteTrifasica(V, Number(I));
+      const S =
+        sistema === "mono"
+          ? Calc.potenciaAparenteMonofasica(V, Number(I))
+          : Calc.potenciaAparenteTrifasica(V, Number(I));
       const enKVA = S >= 1000;
       document.getElementById("s-resultado").innerHTML = resultadoSimple(
         "Potencia aparente",
-        enKVA ? num(S / 1000) + " kVA" : num(S) + " VA"
+        enKVA ? num(S / 1000) : num(S),
+        enKVA ? "kVA" : "VA",
       );
     });
   }
@@ -484,8 +636,8 @@ ${RESISTIVITY_NOTE}`;
     app().innerHTML = `
       ${screenHeader("Potencia reactiva")}
       <main class="form">
-        <label class="field"><span>Potencia activa (W)</span><input type="number" inputmode="decimal" id="q-p"></label>
-        <label class="field"><span>Factor de potencia (cos φ)</span><input type="number" inputmode="decimal" step="0.01" id="q-cosphi" value="0.9"></label>
+        ${fieldConUnidad("Potencia activa", `<input type="number" inputmode="decimal" id="q-p">`, "W")}
+        ${fieldSimple("Factor de potencia (cos φ)", `<input type="number" inputmode="decimal" step="0.01" id="q-cosphi" value="0.9">`)}
         ${errorBox("q-err")}
         <button class="btn btn--primary" id="q-calcular">Calcular</button>
         <div id="q-resultado"></div>
@@ -496,13 +648,20 @@ ${RESISTIVITY_NOTE}`;
       const cosPhiRaw = document.getElementById("q-cosphi").value;
       const vP = Validation.validarPositivo(P, "la potencia activa");
       const vCos = Validation.validarCosPhi(cosPhiRaw);
-      setError("q-err", !vP.valido ? vP.mensaje : !vCos.valido ? vCos.mensaje : "");
+      setError(
+        "q-err",
+        !vP.valido ? vP.mensaje : !vCos.valido ? vCos.mensaje : "",
+      );
       if (!vP.valido || !vCos.valido) return;
-      const Q = Calc.potenciaReactivaDesdeActivaYCosPhi(Number(P), Number(cosPhiRaw));
+      const Q = Calc.potenciaReactivaDesdeActivaYCosPhi(
+        Number(P),
+        Number(cosPhiRaw),
+      );
       const enKvar = Q >= 1000;
       document.getElementById("q-resultado").innerHTML = resultadoSimple(
         "Potencia reactiva",
-        enKvar ? num(Q / 1000) + " kvar" : num(Q) + " var"
+        enKvar ? num(Q / 1000) : num(Q),
+        enKvar ? "kvar" : "var",
       );
     });
   }
@@ -519,12 +678,12 @@ ${RESISTIVITY_NOTE}`;
             <button type="button" class="segmented__opt" data-val="sar">Activa + reactiva</button>
           </div>
         </fieldset>
-        <label class="field"><span>Potencia activa (W)</span><input type="number" inputmode="decimal" id="fp-p"></label>
+        ${fieldConUnidad("Potencia activa", `<input type="number" inputmode="decimal" id="fp-p">`, "W")}
         <div id="fp-aparente-wrap">
-          <label class="field"><span>Potencia aparente (VA)</span><input type="number" inputmode="decimal" id="fp-s"></label>
+          ${fieldConUnidad("Potencia aparente", `<input type="number" inputmode="decimal" id="fp-s">`, "VA")}
         </div>
         <div id="fp-reactiva-wrap" class="is-hidden">
-          <label class="field"><span>Potencia reactiva (var)</span><input type="number" inputmode="decimal" id="fp-q"></label>
+          ${fieldConUnidad("Potencia reactiva", `<input type="number" inputmode="decimal" id="fp-q">`, "var")}
         </div>
         ${errorBox("fp-err")}
         <button class="btn btn--primary" id="fp-calcular">Calcular</button>
@@ -537,8 +696,12 @@ ${RESISTIVITY_NOTE}`;
       if (!btn) return;
       setActive(grupo, btn);
       const esSap = btn.dataset.val === "sap";
-      document.getElementById("fp-aparente-wrap").classList.toggle("is-hidden", !esSap);
-      document.getElementById("fp-reactiva-wrap").classList.toggle("is-hidden", esSap);
+      document
+        .getElementById("fp-aparente-wrap")
+        .classList.toggle("is-hidden", !esSap);
+      document
+        .getElementById("fp-reactiva-wrap")
+        .classList.toggle("is-hidden", esSap);
     });
     document.getElementById("fp-calcular").addEventListener("click", () => {
       const modo = document.querySelector("#fp-modo .is-active").dataset.val;
@@ -557,7 +720,10 @@ ${RESISTIVITY_NOTE}`;
           return;
         }
         if (Number(S) < Number(P)) {
-          setError("fp-err", "La potencia aparente no puede ser menor que la activa.");
+          setError(
+            "fp-err",
+            "La potencia aparente no puede ser menor que la activa.",
+          );
           return;
         }
         setError("fp-err", "");
@@ -572,17 +738,20 @@ ${RESISTIVITY_NOTE}`;
         setError("fp-err", "");
         cosPhi = Calc.cosPhiDesdeActivaYReactiva(Number(P), Number(Q));
       }
-      document.getElementById("fp-resultado").innerHTML = resultadoSimple("cos φ", cosPhi.toFixed(3));
+      document.getElementById("fp-resultado").innerHTML = resultadoSimple(
+        "cos φ",
+        cosPhi.toFixed(3),
+      );
     });
   }
 
-  function resultadoSimple(etiqueta, valor) {
+  function resultadoSimple(etiqueta, valor, unidad) {
     return `
       <section class="result">
-        <h3>Resultado</h3>
-        <dl class="result-grid">
-          <div><dt>${etiqueta}</dt><dd>${valor}</dd></div>
-        </dl>
+        <p class="result__label">${etiqueta}</p>
+        <div class="result__primary">
+          <span class="result__value">${valor}</span>${unidad ? `<span class="result__unit">${unidad}</span>` : ""}
+        </div>
       </section>`;
   }
 
